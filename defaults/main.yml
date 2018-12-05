@@ -1,0 +1,17 @@
+---
+# defaults file for zabbix
+zabbix_server_vars:
+  mysql:
+    user: 'zabbix'
+    database: 'zabbix'
+    db_scheme_path: '/usr/share/doc/zabbix-server-mysql-3.4.7/create.sql.gz'
+  nginx:
+    hostname: 'zabbix.faunus.io'
+    root_path: '/usr/share/zabbix'
+  slack:
+    webhook:
+  telegram:
+    apikey:
+  smsc:
+    user:
+    pass:

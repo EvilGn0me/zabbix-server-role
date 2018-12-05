@@ -1,0 +1,17 @@
+---
+zabbix_server:
+  telegram_bot:
+    install_dir: /usr/share/telegram_bot
+  repos:
+    zabbix:
+      name: 'zabbix'
+      baseurl: 'http://repo.zabbix.com/zabbix/3.4/rhel/7/$basearch/'
+  packages:
+    - zabbix-server-mysql
+    - zabbix-web-mysql
+    - nmap
+    - python-requests
+    - python-urllib3
+  services:
+    - zabbix-server
+    - zabbix-agent

@@ -1,0 +1,34 @@
+- name: manage alertscripts
+  template:
+    src: 'templates/{{ item }}'
+    dest: '/usr/lib/zabbix/alertscripts/{{ item }}'
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+     - zbxtg_settings.py
+  notify: restart zabbix-server
+
+- name: create dirs
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+  with_items:
+    - '{{ zabbix_server.telegram_bot.install_dir }}'
+
+- name: clone telegram_bot repo
+  git:
+    repo: 'https://github.com/ableev/Zabbix-in-Telegram.git'
+    dest: '{{ zabbix_server.telegram_bot.install_dir }}'
+    clone: yes
+    update: yes
+
+- copy:
+    src: '{{ zabbix_server.telegram_bot.install_dir }}/zbxtg.py'
+    dest: /usr/lib/zabbix/alertscripts/zbxtg.py
+    owner: root
+    group: root
+    remote_src: yes
+    mode: 0755

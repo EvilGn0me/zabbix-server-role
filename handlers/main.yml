@@ -1,0 +1,10 @@
+---
+# handlers file for zabbix
+
+- name: restart zabbix-server
+  service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
+  with_items:
+  - "{{ zabbix_server.services }}"

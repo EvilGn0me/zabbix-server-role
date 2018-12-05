@@ -1,0 +1,113 @@
+---
+# tasks file for zabbix
+- name: pre-requisites tasks
+  import_tasks: redhat.yml
+  when: ansible_os_family|lower == 'redhat'
+
+- name: create database for zabbix
+  mysql_db:
+    name: zabbix
+    state: present
+
+- name: create mysql user for zabbix
+  mysql_user:
+    name: "{{ zabbix_server_vars.mysql.user }}"
+    password: "{{ zabbix_server_vars.mysql.password }}"
+    priv: '{{ zabbix_server_vars.mysql.database }}.*:ALL'
+    state: present
+
+- name: check if db scheme file exists
+  stat:
+    path: "{{ zabbix_server_vars.mysql.db_scheme_path }}"
+  register: scheme_db
+
+- name: import zabbix db
+  mysql_db:
+    state: import
+    name: "{{ zabbix_server_vars.mysql.database }}"
+    target: "{{ zabbix_server_vars.mysql.db_scheme_path }}"
+  when: scheme_db.stat.exists
+  notify: restart zabbix-server
+
+- name: manage zabbix nginx config
+  template:
+    src: "templates/zabbix.conf"
+    dest: "/etc/nginx/conf.d/zabbix.conf"
+    owner: "{{ nginx_conf.user }}"
+    group: "{{ nginx_conf.user }}"
+    mode: 0644
+  notify: nginx restart
+
+- name: change zabbix directory rights
+  file:
+    name: "{{ item }}"
+    owner: "{{ nginx_conf.user }}"
+    group: "{{ nginx_conf.user }}"
+    recurse: yes
+  with_items:
+  - /etc/zabbix/web
+
+- name: manage zabbix-server config file
+  template:
+    src: "templates/zabbix_server.conf"
+    dest: "/etc/zabbix/zabbix_server.conf"
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart zabbix-server
+
+- name: manage alertscripts
+  template:
+    src: "templates/{{ item }}"
+    dest: '/usr/lib/zabbix/alertscripts/{{ item }}'
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - slack_notify.sh
+    - smsc.sh
+    - send_mail.sh
+  notify: restart zabbix-server
+
+- name: manage zabbix web interface config
+  template:
+    src: "templates/zabbix.conf.php"
+    dest: "/etc/zabbix/web/zabbix.conf.php"
+    owner: "{{ nginx_conf.user }}"
+    group: "{{ nginx_conf.user }}"
+    mode: 0644
+  notify: nginx restart
+
+- name: add zabbix user to sudoers
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: 'zabbix'
+    line: 'zabbix ALL=NOPASSWD: /usr/bin/nmap'
+
+- name: install telegram bot
+  import_tasks: telegram_bot.yml
+
+- name: Import Docker Template
+  local_action:
+    module: zabbix_template
+    server_url: '{{ zabbix_url }}'
+    login_user: '{{ zabbix_user}}'
+    login_password: '{{ zabbix_pass }}'
+    template_name: Template App Docker
+    template_json: "{{ lookup('file', 'templates/zbx_templates/docker.json') }}"
+    template_groups:
+      - Templates
+    state: present
+  ignore_errors: yes
+
+- name: ensure services running
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+  - "{{ nginx.services }}"
+  - "{{ php_fpm.services }}"
+  - "{{ mariadb.services }}"
+  - "{{ zabbix_server.services }}"
