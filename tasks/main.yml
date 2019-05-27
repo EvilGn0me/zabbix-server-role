@@ -1,8 +1,18 @@
 ---
 # tasks file for zabbix
+- name: Load a variable file based on the OS type.
+  include_vars: '{{ item }}'
+  with_first_found:
+    - '{{ ansible_distribution|lower }}.yml'
+    - '{{ ansible_os_family|lower }}.yml'
+
 - name: pre-requisites tasks
   import_tasks: redhat.yml
   when: ansible_os_family|lower == 'redhat'
+
+- name: pre-requisites tasks
+  import_tasks: debian.yml
+  when: ansible_os_family|lower == 'debian'
 
 - name: create database for zabbix
   mysql_db:
@@ -11,23 +21,39 @@
 
 - name: create mysql user for zabbix
   mysql_user:
-    name: "{{ zabbix_server_vars.mysql.user }}"
-    password: "{{ zabbix_server_vars.mysql.password }}"
-    priv: '{{ zabbix_server_vars.mysql.database }}.*:ALL'
+    name: "{{ zabbix_server_conf.mysql.user }}"
+    password: "{{ zabbix_server_conf.mysql.password }}"
+    priv: '{{ zabbix_server_conf.mysql.database }}.*:ALL'
     state: present
 
 - name: check if db scheme file exists
   stat:
-    path: "{{ zabbix_server_vars.mysql.db_scheme_path }}"
-  register: scheme_db
+    path: "/etc/zabbix/db_created"
+  register: db_exists
+
+- name: copy zabbix schema init file
+  copy:
+    src: "templates/create.sql"
+    dest: "{{ zabbix_server.db_scheme_path }}"
+    owner: root
+    group: root
+    mode: 0644
+  when: db_exists.stat.exists == False
+  notify: restart zabbix-server
 
 - name: import zabbix db
   mysql_db:
     state: import
-    name: "{{ zabbix_server_vars.mysql.database }}"
-    target: "{{ zabbix_server_vars.mysql.db_scheme_path }}"
-  when: scheme_db.stat.exists
+    name: "{{ zabbix_server_conf.mysql.database }}"
+    target: "{{ zabbix_server.db_scheme_path }}"
+  when: db_exists.stat.exists == False
   notify: restart zabbix-server
+
+- name: create db_create file anchor
+  file:
+    name: "/etc/zabbix/db_created"
+    state: touch
+  when: db_exists.stat.exists == False
 
 - name: manage zabbix nginx config
   template:
@@ -56,19 +82,6 @@
     mode: 0644
   notify: restart zabbix-server
 
-- name: manage alertscripts
-  template:
-    src: "templates/{{ item }}"
-    dest: '/usr/lib/zabbix/alertscripts/{{ item }}'
-    owner: root
-    group: root
-    mode: 0755
-  with_items:
-    - slack_notify.sh
-    - smsc.sh
-    - send_mail.sh
-  notify: restart zabbix-server
-
 - name: manage zabbix web interface config
   template:
     src: "templates/zabbix.conf.php"
@@ -87,19 +100,31 @@
 
 - name: install telegram bot
   import_tasks: telegram_bot.yml
+  when: zabbix_server.telegram.apikey is defined
 
-- name: Import Docker Template
-  local_action:
-    module: zabbix_template
-    server_url: '{{ zabbix_url }}'
-    login_user: '{{ zabbix_user}}'
-    login_password: '{{ zabbix_pass }}'
-    template_name: Template App Docker
-    template_json: "{{ lookup('file', 'templates/zbx_templates/docker.json') }}"
-    template_groups:
-      - Templates
-    state: present
-  ignore_errors: yes
+- name: manage slack_notify.sh alertscript
+  template:
+    src: "templates/{{ item }}"
+    dest: '/usr/lib/zabbix/alertscripts/{{ item }}'
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - slack_notify.sh
+  notify: restart zabbix-server
+  when: zabbix_server.slack.webhook is defined
+
+- name: manage slack_notify.sh alertscript
+  template:
+    src: "templates/{{ item }}"
+    dest: '/usr/lib/zabbix/alertscripts/{{ item }}'
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - smsc.sh
+  notify: restart zabbix-server
+  when: zabbix_server.smsc.pass is defined
 
 - name: ensure services running
   service:

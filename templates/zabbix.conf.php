@@ -5,9 +5,9 @@ global $DB;
 $DB['TYPE']     = 'MYSQL';
 $DB['SERVER']   = 'localhost';
 $DB['PORT']     = '0';
-$DB['DATABASE'] = '{{ zabbix_server_vars.mysql.database }}';
-$DB['USER']     = '{{ zabbix_server_vars.mysql.user }}';
-$DB['PASSWORD'] = '{{ zabbix_server_vars.mysql.password }}';
+$DB['DATABASE'] = '{{ zabbix_server_conf.mysql.database }}';
+$DB['USER']     = '{{ zabbix_server_conf.mysql.user }}';
+$DB['PASSWORD'] = '{{ zabbix_server_conf.mysql.password }}';
 
 // Schema name. Used for IBM DB2 and PostgreSQL.
 $DB['SCHEMA'] = '';

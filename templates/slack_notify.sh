@@ -1,6 +1,6 @@
 #!/bin/bash
 
-zabbix_baseurl="{{ zabbix_server_vars.nginx.hostname }}"
+zabbix_baseurl="{{ zabbix_server_conf.nginx.hostname }}"
 
 channel="$1"
 icon="https://secure.gravatar.com/avatar/a6a67349e64aa05088207ab1e2ce3f85.jpg"
@@ -74,7 +74,7 @@ request_body=$(< <(cat <<EOF
 			],
 			/*"image_url": "http://www.zabbix.com/favicon.ico1",*/
 			/*"thumb_url": "http://www.zabbix.com/favicon.ico1",*/
-			"footer": "{{ zabbix_server_vars.nginx.hostname }}",
+			"footer": "{{ zabbix_server_conf.nginx.hostname }}",
 			"footer_icon": "http://www.zabbix.com/favicon.ico",
 			"ts": "$ts",
 			"mrkdwn_in": [
@@ -91,4 +91,4 @@ EOF
 curl -X POST \
 -H 'Content-type: application/json' \
 --data "$request_body"  \
-{{ zabbix_server_vars.slack.webhook }}
+{{ zabbix_server_conf.slack.webhook }}

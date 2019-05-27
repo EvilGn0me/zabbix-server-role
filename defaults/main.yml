@@ -1,6 +1,6 @@
 ---
 # defaults file for zabbix
-zabbix_server_vars:
+zabbix_server_conf:
   mysql:
     user: 'zabbix'
     database: 'zabbix'
@@ -8,10 +8,3 @@ zabbix_server_vars:
   nginx:
     hostname: 'zabbix.faunus.io'
     root_path: '/usr/share/zabbix'
-  slack:
-    webhook:
-  telegram:
-    apikey:
-  smsc:
-    user:
-    pass:

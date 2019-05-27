@@ -1,0 +1,18 @@
+---
+zabbix_server:
+  telegram_bot:
+    install_dir: /usr/share/telegram_bot
+  db_scheme_path: /tmp/create.sql
+  repos:
+    zabbix:
+      repo: 'deb http://repo.zabbix.com/zabbix/4.0/{{ ansible_distribution|lower }} {{ ansible_distribution_release|lower }} main'
+      key: 'https://repo.zabbix.com/zabbix-official-repo.key'
+  packages:
+    - zabbix-server-mysql
+    - zabbix-frontend-php
+    - nmap
+    - python-requests
+    - python-urllib3
+  services:
+    - zabbix-server
+    - zabbix-agent

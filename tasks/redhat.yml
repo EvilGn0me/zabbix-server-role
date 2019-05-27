@@ -15,7 +15,5 @@
 
 - name: install zabbix packages
   yum:
-    name: "{{ item }}"
+    name: "{{ zabbix_server.packages }}"
     state: latest
-  with_items:
-    - "{{ zabbix_server.packages }}"

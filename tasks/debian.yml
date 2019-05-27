@@ -1,0 +1,25 @@
+---
+- name: add repo keys
+  apt_key:
+    url: "{{ item.value.key }}"
+  with_dict: "{{ zabbix_server.repos }}"
+
+- name: add repositories for zabbix
+  apt_repository:
+    repo: "{{ item.value.repo }}"
+    state: present
+  with_dict: "{{ zabbix_server.repos }}"
+
+- name: install zabbix packages
+  apt:
+    name: "{{ zabbix_server.packages }}"
+    state: latest
+    update_cache: yes
+    
+- name: remove directories for zabbix
+  file:
+    path: '{{ item }}'
+    state: absent
+  with_items:
+    - /var/log/zabbix-agent
+    - /etc/zabbix/zabbix_agentd.conf.d

@@ -2,6 +2,7 @@
 zabbix_server:
   telegram_bot:
     install_dir: /usr/share/telegram_bot
+  db_scheme_path: /tmp/create.sql
   repos:
     zabbix:
       name: 'zabbix'

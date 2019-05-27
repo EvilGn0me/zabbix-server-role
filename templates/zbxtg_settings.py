@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-tg_key = "{{ zabbix_server_vars.telegram.apikey }}"  # telegram bot api key
+tg_key = "{{ zabbix_server_conf.telegram.apikey }}"  # telegram bot api key
 
 zbx_tg_prefix = "zbxtg"  # variable for separating text from script info
 zbx_tg_tmp_dir = "/var/tmp/" + zbx_tg_prefix  # directory for saving caches, uids, cookies, etc.
@@ -34,9 +34,9 @@ zbx_tg_daemon_wl_ids = [6931850, ]
 zbx_tg_daemon_wl_u = ["ableev", ]
 
 zbx_db_host = "localhost"
-zbx_db_database = "{{ zabbix_server_vars.mysql.database }}"
-zbx_db_user = "{{ zabbix_server_vars.mysql.user}}"
-zbx_db_password = "{{ zabbix_server_vars.mysql.password }}"
+zbx_db_database = "{{ zabbix_server_conf.mysql.database }}"
+zbx_db_user = "{{ zabbix_server_conf.mysql.user}}"
+zbx_db_password = "{{ zabbix_server_conf.mysql.password }}"
 
 
 emoji_map = {
